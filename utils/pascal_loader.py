@@ -8,6 +8,31 @@ from torchvision import transforms
 from PIL import Image
 import torch
 
+pascal_labels = np.asarray(
+            [
+                [0, 0, 0],
+                [128, 0, 0],
+                [0, 128, 0],
+                [128, 128, 0],
+                [0, 0, 128],
+                [128, 0, 128],
+                [0, 128, 128],
+                [128, 128, 128],
+                [64, 0, 0],
+                [192, 0, 0],
+                [64, 128, 0],
+                [192, 128, 0],
+                [64, 0, 128],
+                [192, 0, 128],
+                [64, 128, 128],
+                [192, 128, 128],
+                [0, 64, 0],
+                [128, 64, 0],
+                [0, 192, 0],
+                [128, 192, 0],
+                [0, 64, 128],
+            ]
+        )
 
 class PascalDatasetLoader(Dataset):
     def __init__(self, path, ):
@@ -46,9 +71,27 @@ class PascalDatasetLoader(Dataset):
         lbl[lbl == 255] = 0 
         return img, lbl
     
-    def encode_segmentation(self, mask):
+    def mask_to_labels(self, mask):
         mask = mask.astype(int)
         label_mask = np.zeros((mask.shape[0], mask.shape[1]), dtype=np.int16)
+        for ii, label in enumerate(pascal_labels):
+            label_mask[np.where(np.all(mask == label, axis=-1))[:2]] = ii
+        label_mask = label_mask.astype(int)
+        return label_mask
+    
+    def labels_to_mask(self, labels): 
+        r = labels.copy()
+        g = labels.copy()
+        b = labels.copy()
+        for ll in range(0, self.num_classes):
+            r[labels == ll] = pascal_labels[ll, 0]
+            g[labels == ll] = pascal_labels[ll, 1]
+            b[labels == ll] = pascal_labels[ll, 2]
+        rgb = np.zeros((labels.shape[0], labels.shape[1], 3))
+        rgb[:, :, 0] = r / 255.0
+        rgb[:, :, 1] = g / 255.0
+        rgb[:, :, 2] = b / 255.0
+
 
 if __name__ == "main":
     path = '/home/jimiolaniyan/Documents/Research/VOCdevkit/VOC2012'
