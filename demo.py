@@ -53,7 +53,12 @@ def do_crf_inference(image, unary, args):
 
     # get basic hyperparameters
     num_classes = unary.shape[2]
-    shape = image.shape[0:2]
+    
+    if type(image) is torch.Tensor:
+        shape = image.shape[2:4]
+    else:
+        shape = image.shape[0:2]
+    
     config = convcrf.default_conf
     config['filter_size'] = 7
     config['pyinn'] = args.pyinn
@@ -75,11 +80,12 @@ def do_crf_inference(image, unary, args):
         # schan = 0.1 is a good starting value for normalized images.
         # The relation is f_i = image * schan
         config['col_feats']['schan'] = 0.1
-
-    # make input pytorch compatible
-    image = image.transpose(2, 0, 1)  # shape: [3, hight, width]
-    # Add batch dimension to image: [1, 3, height, width]
-    image = image.reshape([1, 3, shape[0], shape[1]])
+    
+    if type(image) is not torch.Tensor:
+        # make input pytorch compatible
+        image = image.transpose(2, 0, 1)  # shape: [3, hight, width]
+        # Add batch dimension to image: [1, 3, height, width]
+        image = image.reshape([1, 3, shape[0], shape[1]])
     img_var = Variable(torch.Tensor(image)).cuda()
 
     unary = unary.transpose(2, 0, 1)  # shape: [3, hight, width]
@@ -87,7 +93,7 @@ def do_crf_inference(image, unary, args):
     unary = unary.reshape([1, num_classes, shape[0], shape[1]])
     unary_var = Variable(torch.Tensor(unary)).cuda()
 
-    logging.info("Build ConvCRF.")
+#     logging.info("Build ConvCRF.")
     ##
     # Create CRF module
     gausscrf = convcrf.GaussCRF(conf=config, shape=shape, nclasses=num_classes)
@@ -95,7 +101,7 @@ def do_crf_inference(image, unary, args):
     # A CPU implementation of our message passing is not provided.
     gausscrf.cuda()
 
-    logging.info("Start Computation.")
+#     logging.info("Start Computation.")
     # Perform CRF inference
     prediction = gausscrf.forward(unary=unary_var, img=img_var)
 
@@ -136,7 +142,7 @@ def plot_results(image, unary, prediction, label, args):
 
     if matplotlib:
         # Plot results using matplotlib
-        figure = plt.figure()
+        figure = plt.figure(figsize=(16,9))
         figure.tight_layout()
 
         # Plot parameters
