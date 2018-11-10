@@ -47,15 +47,15 @@ import gc
 
 # Default config as proposed by Philipp Kraehenbuehl and Vladlen Koltun,
 default_conf = {
-    'filter_size': 11,
-    'blur': 4,
+    'filter_size': 7,
+    'blur': 1,
     'merge': True,
     'norm': 'none',
     'weight': 'vector',
     "unary_weight": 1,
     "weight_init": 0.2,
 
-    'trainable': False,
+    'trainable': True,
     'convcomp': False,
     'logsoftmax': True,  # use logsoftmax for numerical stability
     'softmax': True,
@@ -84,7 +84,6 @@ test_config = {
     'blur': 1,
     'merge': False,
     'norm': 'sym',
-    'trainable': False,
     'weight': 'scalar',
     "unary_weight": 1,
     "weight_init": 0.5,
@@ -354,6 +353,7 @@ class MessagePassingCol():
 
             npixels = [math.ceil(self.npixels[0] / self.blur),
                        math.ceil(self.npixels[1] / self.blur)]
+            print('npixels', npixels, 'features', features.shape)
             assert(npixels[0] == features.shape[2])
             assert(npixels[1] == features.shape[3])
         else:
