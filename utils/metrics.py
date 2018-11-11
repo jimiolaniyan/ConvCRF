@@ -46,6 +46,9 @@ class Metrics():
             },
             cls_iu,
         )
+    
+    def reset(self):
+        self.score_matrix = np.zeros((self.num_classes, self.num_classes))
 
 class Averages(object):
     """Computes and stores the average and current value"""
