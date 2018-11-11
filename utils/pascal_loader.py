@@ -35,11 +35,16 @@ pascal_labels = np.asarray(
         )
 
 class PascalDatasetLoader(Dataset):
-    def __init__(self, path, ):
+    def __init__(self, path, split, img_size=500):
         self.path = path
+        self.img_size = img_size
+        self.split = split
         self.num_classes = 21
         self.mean = np.array([104.00699, 116.66877, 122.67892])
-        self.files = self._get_files()
+        self.files = defaultdict(list)
+
+        for split in ["train", "val", "traincrf"]:
+            self._get_files(split)
 
         self.tform = transforms.Compose([
             transforms.ToTensor(),
@@ -48,10 +53,10 @@ class PascalDatasetLoader(Dataset):
                 [0.229, 0.224, 0.225])])
 
     def __len__(self):
-        return len(self.files)
+        return len(self.files[self.split])
 
     def __getitem__(self, index):
-        img_name = self.files[index]
+        img_name = self.files[self.split][index]
         img_path = os.path.join(self.path, "JPEGImages", img_name + ".jpg")
         lbl_path = os.path.join(self.path, "SegmentationClass", img_name + ".png")
         img = Image.open(img_path)
@@ -59,13 +64,16 @@ class PascalDatasetLoader(Dataset):
         img, lbl = self.transform(img, lbl)
         return img, lbl
     
-    def _get_files(self):
-        file_list_path = os.path.join(self.path, "ImageSets/Segmentation/val.txt")
+    def _get_files(self, split):
+        file_list_path = os.path.join(self.path, "ImageSets/Segmentation", split + ".txt")
         file_list = tuple(open(file_list_path, "r"))
         file_list = [id_.rstrip() for id_ in file_list]
+        self.files[split] = file_list
         return file_list
     
     def transform(self, img, lbl):
+        img = img.resize((self.img_size, self.img_size))
+        lbl = lbl.resize((self.img_size, self.img_size))
         img = self.tform(img)
         lbl = torch.from_numpy(np.array(lbl)).long()
         lbl[lbl == 255] = 0 
