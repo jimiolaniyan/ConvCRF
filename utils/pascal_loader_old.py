@@ -7,8 +7,6 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from PIL import Image
 import torch
-import random
-import torchvision.transforms.functional as TF
 
 pascal_labels = np.asarray(
             [
@@ -37,7 +35,7 @@ pascal_labels = np.asarray(
         )
 
 class PascalDatasetLoader(Dataset):
-    def __init__(self, path, split, sample_size=None, img_size=500):
+    def __init__(self, path, split, img_size=500):
         self.path = path
         self.img_size = img_size
         self.split = split
@@ -46,16 +44,13 @@ class PascalDatasetLoader(Dataset):
         self.files = defaultdict(list)
 
         for split in ["train", "val", "traincrf"]:
-            self._get_files(split, sample_size if self.split == split else None)
+            self._get_files(split)
 
-        self.img_tform = transforms.Compose([
-            transforms.CenterCrop(500),
+        self.tform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(
                 [0.485, 0.456, 0.406], 
                 [0.229, 0.224, 0.225])])
-        
-        self.lbl_tform = transforms.CenterCrop(500)
 
     def __len__(self):
         return len(self.files[self.split])
@@ -69,29 +64,17 @@ class PascalDatasetLoader(Dataset):
         img, lbl = self.transform(img, lbl)
         return img, lbl
     
-    def _get_files(self, split, sample_size):
+    def _get_files(self, split):
         file_list_path = os.path.join(self.path, "ImageSets/Segmentation", split + ".txt")
         file_list = tuple(open(file_list_path, "r"))
         file_list = [id_.rstrip() for id_ in file_list]
-        
-        if sample_size:
-            print('I am gonna do a random subsample of size {} from {} set of file list size {}'
-                  .format(sample_size, split, len(file_list)))
-            file_list = random.sample(file_list, sample_size)
-            
         self.files[split] = file_list
         return file_list
     
-    def get_padding(self, shape):
-        return (max(500 - shape[0], 0), max(500 - shape[1], 0))
-    
     def transform(self, img, lbl):
-#         img = img.resize((self.img_size, self.img_size))
-#         lbl = lbl.resize((self.img_size, self.img_size))
-        img = TF.pad(img, self.get_padding(img.size))
-        img = self.img_tform(img)
-        lbl = TF.pad(lbl, self.get_padding(lbl.size))
-        lbl = self.lbl_tform(lbl)
+        img = img.resize((self.img_size, self.img_size))
+        lbl = lbl.resize((self.img_size, self.img_size))
+        img = self.tform(img)
         lbl = torch.from_numpy(np.array(lbl)).long()
         lbl[lbl == 255] = 0 
         return img, lbl

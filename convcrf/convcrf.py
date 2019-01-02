@@ -32,6 +32,7 @@ except ImportError:
     has_pyinn = False
     pass
 
+
 from utils import test_utils
 
 import torch
@@ -47,7 +48,7 @@ import gc
 
 # Default config as proposed by Philipp Kraehenbuehl and Vladlen Koltun,
 default_conf = {
-    'filter_size': 7,
+    'filter_size': 5,
     'blur': 1,
     'merge': True,
     'norm': 'none',
