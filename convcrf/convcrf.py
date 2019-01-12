@@ -48,7 +48,7 @@ import gc
 
 # Default config as proposed by Philipp Kraehenbuehl and Vladlen Koltun,
 default_conf = {
-    'filter_size': 5,
+    'filter_size': 7,
     'blur': 1,
     'merge': True,
     'norm': 'none',
@@ -603,7 +603,6 @@ class ConvCRF(nn.Module):
             if not i == num_iter - 1 or self.final_softmax:
                 if self.conf['softmax']:
                     prediction = exp_and_normalize(prediction, dim=1)
-
         return prediction
 
     def start_inference(self):

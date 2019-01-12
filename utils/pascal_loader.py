@@ -75,8 +75,6 @@ class PascalDatasetLoader(Dataset):
         file_list = [id_.rstrip() for id_ in file_list]
         
         if sample_size:
-            print('I am gonna do a random subsample of size {} from {} set of file list size {}'
-                  .format(sample_size, split, len(file_list)))
             file_list = random.sample(file_list, sample_size)
             
         self.files[split] = file_list
@@ -86,12 +84,13 @@ class PascalDatasetLoader(Dataset):
         return (max(500 - shape[0], 0), max(500 - shape[1], 0))
     
     def transform(self, img, lbl):
-#         img = img.resize((self.img_size, self.img_size))
-#         lbl = lbl.resize((self.img_size, self.img_size))
-        img = TF.pad(img, self.get_padding(img.size))
-        img = self.img_tform(img)
-        lbl = TF.pad(lbl, self.get_padding(lbl.size))
-        lbl = self.lbl_tform(lbl)
+        img = img.resize((self.img_size, self.img_size))
+        lbl = lbl.resize((self.img_size, self.img_size))
+        # img = TF.pad(img, self.get_padding(img.size))
+        # img = self.img_tform(img)
+        # lbl = TF.pad(lbl, self.get_padding(lbl.size))
+        # lbl = self.lbl_tform(lbl)
+        img = torch.from_numpy(np.array(img).transpose(2, 0, 1)).float()
         lbl = torch.from_numpy(np.array(lbl)).long()
         lbl[lbl == 255] = 0 
         return img, lbl
